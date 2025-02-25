@@ -75,8 +75,3 @@ Happy downloading! 🐾✨
 
 ---
 
-### **Notes:**
-- The **banner URL** is a placeholder (`https://placehold.co/800x200`). You can replace it with an actual BooCat banner image!
-- This README is **formatted properly for GitHub** and will look cute and clean!  
-- Let me know if you want any extra styling or emojis! 🐾
-
