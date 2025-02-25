@@ -1,29 +1,29 @@
-BooCat 🐱👻 – The Cute YouTube Downloader
-
-BooCat is a spooky-cute YouTube downloader that grabs videos in the best quality available and temporarily stores them on Litterbox, so they disappear after a set time! 🎃✨
-
 
 ---
 
-🎃 Features
+# 🎃🐱 **BooCat – The Cute YouTube Downloader** 🐱👻  
+![BooCat Banner](https://placehold.co/800x200?text=BooCat+YouTube+Downloader&font=Montserrat)  
 
-✅ Downloads YouTube videos in up to 4K resolution (if available).
-✅ Automatically downgrades quality if higher resolutions aren’t available.
-✅ Stores downloads in a folder for easy access.
-✅ Uploads to Litterbox for temporary storage (1h, 12h, 24h, or 72h).
-✅ Adorable name because ghosts + cats = 💖
-
+BooCat is a **spooky-cute** YouTube downloader that grabs videos in the best quality available and temporarily stores them on **Litterbox**, so they disappear after a set time! 🎃✨  
 
 ---
 
-📦 Requirements
+## **🎃 Features**  
+✅ **Downloads YouTube videos** in up to **4K resolution** (if available).  
+✅ **Automatically downgrades quality** if higher resolutions aren’t available.  
+✅ **Stores downloads in a folder** for easy access.  
+✅ **Uploads to Litterbox** for **temporary storage** (1h, 12h, 24h, or 72h).  
+✅ **Adorable name** because ghosts + cats = 💖  
 
-Before using BooCat, make sure you have the following installed:
+---
 
-🐍 Python Dependencies
+## **📦 Requirements**  
 
-Install required packages using:
+Before using BooCat, make sure you have the following installed:  
 
+### **🐍 Python Dependencies**  
+Install required packages using:  
+```bash
 pip install yt-dlp requests
 
 🎬 FFmpeg (Required for merging audio and video)
@@ -72,4 +72,11 @@ Uploaded to Litterbox: https://litter.catbox.moe/temp/abc123.mp4
 Because downloading videos should be cute, simple, and temporary! 🎃🐱
 
 Happy downloading! 🐾✨
+
+---
+
+### **Notes:**
+- The **banner URL** is a placeholder (`https://placehold.co/800x200`). You can replace it with an actual BooCat banner image!
+- This README is **formatted properly for GitHub** and will look cute and clean!  
+- Let me know if you want any extra styling or emojis! 🐾
 
