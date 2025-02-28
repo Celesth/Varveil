@@ -1,76 +1,79 @@
 
----
+## **BooCat - YouTube Video Downloader
 
-# 🎃🐱 **BooCat – The Cute YouTube Downloader** 🐱👻  
-![BooCat Banner](https://placehold.co/800x200?text=BooCat+YouTube+Downloader&font=Montserrat)  
+BooCat is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage. It also sends notifications via Discord webhooks.
 
-BooCat is a **spooky-cute** YouTube downloader that grabs videos in the best quality available and temporarily stores them on **Litterbox**, so they disappear after a set time! 🎃✨  
+## Features
 
----
+Downloads YouTube videos in the highest available quality (4K → 2K → 1080p).
 
-## **🎃 Features**  
-✅ **Downloads YouTube videos** in up to **4K resolution** (if available).  
-✅ **Automatically downgrades quality** if higher resolutions aren’t available.  
-✅ **Stores downloads in a folder** for easy access.  
-✅ **Uploads to Litterbox** for **temporary storage** (1h, 12h, 24h, or 72h).  
-✅ **Adorable name** because ghosts + cats = 💖  
+Encrypts developer webhook for security.
 
----
+Automatically uploads videos to Litterbox.
 
-## **📦 Requirements**  
+Sends a notification via Discord webhook.
 
-Before using BooCat, make sure you have the following installed:  
+Supports manual and default URL input.
 
-### **🐍 Python Dependencies**  
-Install required packages using:  
-```bash
-pip install yt-dlp requests
 
-🎬 FFmpeg (Required for merging audio and video)
+## Installation
 
-FFmpeg is required for the best quality downloads. If you’re using Replit, you can add it via Nix with:
+1. Clone the Repository
 
-pkgs.ffmpeg
+git clone https://github.com/yourusername/boocat.git
+cd boocat
 
-Otherwise, install it manually:
+2. Install Dependencies
 
-Windows: Download FFmpeg and add it to PATH.
+pip install -r requirements.txt
 
-Mac: brew install ffmpeg
+3. Install FFmpeg (Replit Users)
 
-Linux: sudo apt install ffmpeg
+apt-get install ffmpeg -y
 
+## Configuration
+
+1. Create a config.py file and add:
+
+
+```python
+URL = "https://example.com/default-video"
+TIME = "1h"  # Litterbox storage duration
+BooCatAPI = "YOUR_PUBLIC_WEBHOOK_URL"
 ```
 
 
-## 🚀 How to Use BooCat
 
-1️⃣ Run the script:
+## Usage
 
-python boocat.py
+Run the script:
 
-2️⃣ Enter the YouTube video URL when prompted.
-3️⃣ BooCat will download the best quality video and store it in the boocat_downloads/ folder.
-4️⃣ Automatically uploads to Litterbox and provides a temporary link! 🐾
+python main.py
 
+You will be prompted to enter a YouTube video URL. If left blank, it will use the default URL.
 
----
+## How It Works
 
-## 🎭 Example Output
-
-Enter the YouTube video URL: https://www.youtube.com/watch?v=dQw4w9WgXcQ
-Downloading in best quality available...
-BooCat completed: boocat_downloads/Never_Gonna_Give_You_Up.mp4
-Uploaded to Litterbox: https://litter.catbox.moe/temp/abc123.mp4
+1. Decrypts the hidden developer webhook using the key from GitHub.
 
 
----
+2. Downloads the YouTube video in the best available quality.
 
-## 💜 Why BooCat?
 
-Because downloading videos should be cute, simple, and temporary! 🎃🐱
+3. Uploads the downloaded video to Litterbox.
 
-Happy downloading! 🐾✨
+
+4. Sends a notification with the video links via Discord webhook.
+
+
+
+## Credits
+
+Uses yt-dlp for downloading.
+
+Uses Litterbox for temporary file storage.
+
+
 
 ---
 
