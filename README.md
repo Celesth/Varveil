@@ -1,6 +1,6 @@
 
 ## BooCat - YouTube Video Downloader
-
+# 
 BooCat is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage. It also sends notifications via Discord webhooks.
 
 ## Features
@@ -76,6 +76,7 @@ Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for downloading.
 
 Uses [Litterbox](https://litterbox.catbox.moe/tools.php) for temporary file storage.
 
+Uses [FFMPEG](https://www.ffmpeg.org/)
 
 
 ---
