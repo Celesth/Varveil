@@ -1,43 +1,69 @@
 import os
 import yt_dlp
 import requests
-import base64
-from config import URL, TIME, BOOCAT_API
+from config import URL, TIME
 
-ENCODED_BOOCAT_INTERNAL = "WUVFRG5BTUVURUxM"
-BOOCAT_INTERNAL = base64.b64decode(ENCODED_BOOCAT_INTERNAL).decode()
-
-# Create a folder to store downloaded videos
+# Create folders for downloads and saved links
 DOWNLOAD_FOLDER = "boocat_downloads"
+BOOLINKS_FOLDER = "Boolinks"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
+os.makedirs(BOOLINKS_FOLDER, exist_ok=True)
 
 # Litterbox API endpoint
 LITTERBOX_URL = "https://litterbox.catbox.moe/resources/internals/api.php"
 
-def send_boocat_api(video_title, download_url, api_url, internal=False):
-    """Sends a message to the BooCat API (User or Internal)."""
-    if not api_url:
-        return  # Skip if no API is set
+# Preferred resolutions (descending order)
+PREFERRED_RESOLUTIONS = ["2160p", "1440p", "1080p", "720p", "480p", "360p"]
 
-    payload = {
-        "username": "BooCat",
-        "avatar_url": "https://placehold.co/100x100?text=BooCat",
-        "embeds": [
-            {
-                "title": "📥 Video Processed!" if not internal else "🐾 BooCat Internal Log",
-                "description": f"**Title:** {video_title}\n🔗 **Litterbox Link:** [Click here]({download_url})\n⏳ **Expires in:** {TIME}",
-                "color": 16753920 if not internal else 16711680  # Red for internal logs
-            }
-        ]
-    }
+def get_available_formats(video_url):
+    """Fetches available formats and ensures best video + audio if needed."""
+    ydl_opts = {'quiet': True}
+    available_formats = []
 
     try:
-        requests.post(api_url, json=payload)
-    except:
-        pass  # Silent failure to avoid suspicion
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(video_url, download=False)
+            formats = info_dict.get('formats', [])
 
-def upload_to_litterbox(filename):
-    """Uploads a file to Litterbox and returns the URL."""
+            # Try to find combined (video + audio) formats first
+            for res in PREFERRED_RESOLUTIONS:
+                for fmt in formats:
+                    if fmt.get('format_note') == res and fmt.get('acodec') != 'none' and fmt.get('vcodec') != 'none':
+                        available_formats.append((fmt['format_id'], res, fmt.get('filesize', "Unknown Size"), True))
+                        break  # Stop searching for this resolution if found
+
+            # If combined formats are missing, get separate video + audio
+            for res in PREFERRED_RESOLUTIONS:
+                video_fmt, audio_fmt = None, None
+                for fmt in formats:
+                    if fmt.get('format_note') == res and fmt.get('vcodec') != 'none' and fmt.get('acodec') == 'none':
+                        video_fmt = fmt['format_id']
+                    elif fmt.get('acodec') != 'none' and fmt.get('vcodec') == 'none':
+                        audio_fmt = fmt['format_id']
+                
+                if video_fmt and audio_fmt:
+                    available_formats.append((f"{video_fmt}+{audio_fmt}", res, "Merged", False))
+
+    except Exception as e:
+        print(f"⚠️ Error fetching formats: {e}")
+
+    return available_formats
+
+def save_link(video_title, youtube_url, litterbox_url):
+    """Saves the Litterbox link and YouTube video info to a file."""
+    filename = os.path.join(BOOLINKS_FOLDER, f"{video_title}.txt")
+    try:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(f"🎥 Video Title: {video_title}\n")
+            file.write(f"🔗 YouTube URL: {youtube_url}\n")
+            file.write(f"📤 Litterbox Link: {litterbox_url}\n")
+            file.write(f"⏳ Expiration Time: {TIME}\n")
+        print(f"✅ Saved link in: {filename}")
+    except Exception as e:
+        print(f"⚠️ Error saving link: {e}")
+
+def upload_to_litterbox(filename, video_title, youtube_url):
+    """Uploads a file to Litterbox, deletes the original file, and saves the link."""
     try:
         with open(filename, "rb") as file:
             response = requests.post(LITTERBOX_URL, files={
@@ -46,32 +72,67 @@ def upload_to_litterbox(filename):
                 "reqtype": "fileupload",
                 "time": TIME
             })
-        return response.text if response.status_code == 200 else None
-    except:
+        if response.status_code == 200:
+            litterbox_url = response.text.strip()
+            print(f"\n✅ Uploaded to Litterbox: {litterbox_url}")
+
+            # Save the link in Boolinks folder
+            save_link(video_title, youtube_url, litterbox_url)
+
+            # Delete the original file after successful upload
+            os.remove(filename)
+            print(f"🗑️ Deleted local file: {filename}")
+
+            return litterbox_url
+        else:
+            print(f"❌ Upload failed: {response.text}")
+            return None
+    except Exception as e:
+        print(f"⚠️ An error occurred during upload: {e}")
         return None
 
-def boocat(video_url):
+def boocat(video_url, format_id, is_combined):
     """Downloads a YouTube video and uploads it to Litterbox."""
     ydl_opts = {
-        'format': 'bestvideo[height<=2160]+bestaudio/best[height<=2160]/bestvideo[height<=1440]+bestaudio/best[height<=1440]/bestvideo[height<=1080]+bestaudio/best[height<=1080]',  
+        'format': format_id,
         'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
-        'merge_output_format': 'mp4',
+        'merge_output_format': 'mp4' if not is_combined else None,  # Merge if separate
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(video_url, download=True)
             filename = ydl.prepare_filename(info_dict)
+            video_title = info_dict.get("title", "Unknown Video")
 
-            # Upload to Litterbox
-            litterbox_url = upload_to_litterbox(filename)
-            if litterbox_url:
-                send_boocat_api(info_dict.get("title", "Unknown Video"), litterbox_url, BOOCAT_API)
-                send_boocat_api(info_dict.get("title", "Unknown Video"), litterbox_url, BOOCAT_INTERNAL, internal=True)
+            # Upload to Litterbox and delete the file
+            upload_to_litterbox(filename, video_title, video_url)
 
-    except:
-        pass  # Silent failure
+    except Exception as e:
+        print(f"⚠️ An error occurred: {e}")
 
 if __name__ == "__main__":
-    url = URL if URL else input("Enter the YouTube video URL: ")
-    boocat(url)
+    url = URL if URL else input("\n🔗 Enter the YouTube video URL: ").strip()
+
+    # Get available formats
+    formats = get_available_formats(url)
+    if not formats:
+        print("❌ No available formats found.")
+        exit(1)
+
+    # Display available formats
+    print("\n🎥 Available Video Qualities:")
+    for i, (fmt_id, fmt_note, fmt_size, is_combined) in enumerate(formats, start=1):
+        type_label = "✅ Video + Audio" if is_combined else "🔄 Merged"
+        print(f"{i}. {fmt_note} - {fmt_size} ({fmt_id}) [{type_label}]")
+
+    # User selects a format
+    try:
+        choice = int(input("\n📌 Select a format number to download: ").strip()) - 1
+        if 0 <= choice < len(formats):
+            selected_format, selected_res, _, is_combined = formats[choice]
+            boocat(url, selected_format, is_combined)
+        else:
+            print("❌ Invalid selection.")
+    except ValueError:
+        print("❌ Invalid input. Please enter a number.")
