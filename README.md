@@ -72,7 +72,7 @@ You will be prompted to enter a YouTube video URL. If left blank, it will use th
 
 ## Credits
 
-Uses yt-dlp for downloading.
+Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for downloading.
 
 Uses [Litterbox](https://litterbox.catbox.moe/tools.php) for temporary file storage.
 
