@@ -49,8 +49,9 @@ BooCatAPI = "YOUR_PUBLIC_WEBHOOK_URL"
 ## Usage
 
 Run the script:
-
+```python
 python main.py
+```
 
 You will be prompted to enter a YouTube video URL. If left blank, it will use the default URL.
 
