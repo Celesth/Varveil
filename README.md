@@ -63,7 +63,7 @@ Uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for downloading.
 
 Uses [Litterbox](https://litterbox.catbox.moe/tools.php) for temporary file storage.
 
-Uses [FFMPEG](https://www.ffmpeg.org/)
+Uses [FFMPEG](https://www.ffmpeg.org/) For Merging Video And Audio Together
 
 
 ---
