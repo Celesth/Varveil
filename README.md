@@ -40,11 +40,10 @@ Mac: brew install ffmpeg
 
 Linux: sudo apt install ffmpeg
 
+```
 
 
----
-
-🚀 How to Use BooCat
+## 🚀 How to Use BooCat
 
 1️⃣ Run the script:
 
@@ -57,7 +56,7 @@ python boocat.py
 
 ---
 
-🎭 Example Output
+## 🎭 Example Output
 
 Enter the YouTube video URL: https://www.youtube.com/watch?v=dQw4w9WgXcQ
 Downloading in best quality available...
@@ -67,7 +66,7 @@ Uploaded to Litterbox: https://litter.catbox.moe/temp/abc123.mp4
 
 ---
 
-💜 Why BooCat?
+## 💜 Why BooCat?
 
 Because downloading videos should be cute, simple, and temporary! 🎃🐱
 
