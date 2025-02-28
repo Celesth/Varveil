@@ -1,5 +1,5 @@
 
-## **BooCat - YouTube Video Downloader
+## ** BooCat - YouTube Video Downloader
 
 BooCat is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage. It also sends notifications via Discord webhooks.
 
@@ -25,12 +25,13 @@ git clone https://github.com/yourusername/boocat.git
 cd boocat
 ```
 2. Install Dependencies
-
+```python
 pip install -r requirements.txt
-
+```
 3. Install FFmpeg (Replit Users)
-
+```shell
 apt-get install ffmpeg -y
+```
 
 ## Configuration
 
