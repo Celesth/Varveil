@@ -19,10 +19,11 @@ Supports manual and default URL input.
 ## Installation
 
 1. Clone the Repository
-
+```bash
 git clone https://github.com/yourusername/boocat.git
-cd boocat
 
+cd boocat
+```
 2. Install Dependencies
 
 pip install -r requirements.txt
