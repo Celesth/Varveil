@@ -7,14 +7,9 @@ BooCat is a YouTube video downloader that prioritizes 4K resolution and uploads 
 #
 Downloads YouTube videos in the highest available quality (4K → 2K → 1080p).
 
-Encrypts developer webhook for security.
-
 Automatically uploads videos to Litterbox.
 
-Sends a notification via Discord webhook.
-
 Supports manual and default URL input.
-
 
 ## Installation
 #
