@@ -1,5 +1,5 @@
 
-## BooCat - YouTube Video Downloader
+## Varveil - YouTube Video Downloader
 # 
 BooCat is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage. It also sends notifications via Discord webhooks.
 
@@ -36,7 +36,6 @@ apt-get install ffmpeg -y
 ```python
 URL = "https://example.com/default-video"
 TIME = "1h"  # Litterbox storage duration
-BooCatAPI = "YOUR_PUBLIC_WEBHOOK_URL"
 ```
 
 
