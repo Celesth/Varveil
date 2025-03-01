@@ -15,7 +15,7 @@ Supports manual and default URL input.
 #
 1. Clone the Repository
 ```bash
-git clone https://github.com/celesth/varveil.git
+git clone https://github.com/Celesth/Varveil.git
 
 cd boocat
 ```
