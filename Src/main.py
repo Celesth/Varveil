@@ -4,16 +4,28 @@ import requests
 from config import URL, TIME
 
 # Create folders for downloads and saved links
-DOWNLOAD_FOLDER = "boocat_downloads"
-BOOLINKS_FOLDER = "Boolinks"
+DOWNLOAD_FOLDER = "varveil_downloads"
+VARLINKS_FOLDER = "Varlinks"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
-os.makedirs(BOOLINKS_FOLDER, exist_ok=True)
+os.makedirs(VARLINKS_FOLDER, exist_ok=True)
 
 # Litterbox API endpoint
 LITTERBOX_URL = "https://litterbox.catbox.moe/resources/internals/api.php"
 
 # Preferred resolutions (descending order)
 PREFERRED_RESOLUTIONS = ["2160p", "1440p", "1080p", "720p", "480p", "360p"]
+
+def print_banner():
+    """Displays the Varveil banner."""
+    banner = """
+██    ██  █████  ██████  ██      ██ ███████ 
+██    ██ ██   ██ ██   ██ ██      ██ ██      
+██    ██ ███████ ██████  ██      ██ █████   
+ ██  ██  ██   ██ ██   ██ ██      ██ ██      
+  ████   ██   ██ ██   ██ ███████ ██ ███████ 
+
+"""
+    print(banner)
 
 def get_available_formats(video_url):
     """Fetches available formats and ensures best video + audio if needed."""
@@ -30,7 +42,7 @@ def get_available_formats(video_url):
                 for fmt in formats:
                     if fmt.get('format_note') == res and fmt.get('acodec') != 'none' and fmt.get('vcodec') != 'none':
                         available_formats.append((fmt['format_id'], res, fmt.get('filesize', "Unknown Size"), True))
-                        break  # Stop searching for this resolution if found
+                        break
 
             # If combined formats are missing, get separate video + audio
             for res in PREFERRED_RESOLUTIONS:
@@ -51,7 +63,7 @@ def get_available_formats(video_url):
 
 def save_link(video_title, youtube_url, litterbox_url):
     """Saves the Litterbox link and YouTube video info to a file."""
-    filename = os.path.join(BOOLINKS_FOLDER, f"{video_title}.txt")
+    filename = os.path.join(VARLINKS_FOLDER, f"{video_title}.txt")
     try:
         with open(filename, "w", encoding="utf-8") as file:
             file.write(f"🎥 Video Title: {video_title}\n")
@@ -76,7 +88,7 @@ def upload_to_litterbox(filename, video_title, youtube_url):
             litterbox_url = response.text.strip()
             print(f"\n✅ Uploaded to Litterbox: {litterbox_url}")
 
-            # Save the link in Boolinks folder
+            # Save the link in Varlinks folder
             save_link(video_title, youtube_url, litterbox_url)
 
             # Delete the original file after successful upload
@@ -91,7 +103,7 @@ def upload_to_litterbox(filename, video_title, youtube_url):
         print(f"⚠️ An error occurred during upload: {e}")
         return None
 
-def boocat(video_url, format_id, is_combined):
+def varveil(video_url, format_id, is_combined):
     """Downloads a YouTube video and uploads it to Litterbox."""
     ydl_opts = {
         'format': format_id,
@@ -112,6 +124,8 @@ def boocat(video_url, format_id, is_combined):
         print(f"⚠️ An error occurred: {e}")
 
 if __name__ == "__main__":
+    print_banner()
+    
     url = URL if URL else input("\n🔗 Enter the YouTube video URL: ").strip()
 
     # Get available formats
@@ -131,7 +145,7 @@ if __name__ == "__main__":
         choice = int(input("\n📌 Select a format number to download: ").strip()) - 1
         if 0 <= choice < len(formats):
             selected_format, selected_res, _, is_combined = formats[choice]
-            boocat(url, selected_format, is_combined)
+            varveil(url, selected_format, is_combined)
         else:
             print("❌ Invalid selection.")
     except ValueError:
