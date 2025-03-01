@@ -1,7 +1,7 @@
 
 ## Varveil - YouTube Video Downloader
 # 
-BooCat is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage. It also sends notifications via Discord webhooks.
+Varveil is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage.
 
 ## Features
 #
@@ -15,7 +15,7 @@ Supports manual and default URL input.
 #
 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/boocat.git
+git clone https://github.com/celesth/varveil.git
 
 cd boocat
 ```
@@ -34,7 +34,7 @@ apt-get install ffmpeg -y
 
 
 ```python
-URL = "https://example.com/default-video"
+URL = "https://example.com/default-video" # if cannot enter the link via the IDE Your runing on
 TIME = "1h"  # Litterbox storage duration
 ```
 
