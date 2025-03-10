@@ -17,16 +17,51 @@ Supports manual and default URL input.
 ```bash
 git clone https://github.com/Celesth/Varveil.git
 
-cd boocat
 ```
 2. Install Dependencies
 ```python
 pip install -r requirements.txt
 ```
-3. Install FFmpeg (Replit Users)
-```shell
-apt-get install ffmpeg -y
+
+0. Replit ( For Replit Users )
+```sh
+In Replit, you can install ffmpeg using Nix by adding it to your replit.nix file.
+
+Steps to Add ffmpeg in Replit:
+
+1. Open your Replit project.
+
+
+2. Look for a file named replit.nix (if it doesn’t exist, create it).
+
+
+3. Add or modify the file with this content:
+
+{ pkgs }: {
+  deps = [
+    pkgs.ffmpeg  # Installs ffmpeg
+  ];
+}
+
+
+4. Save the file.
+
+
+5. Click the "Run" button in Replit or restart the shell by typing:
+
+nix-env -iA nixpkgs.ffmpeg
+
+
+
+Verify Installation
+
+Run the following command in the Replit shell to check if ffmpeg is installed:
+
+ffmpeg -version
+
+Now yt-dlp should be able to merge video and audio without issues.
 ```
+
 
 ## Configuration
 #
