@@ -38,24 +38,30 @@ def get_available_formats(video_url):
             info_dict = ydl.extract_info(video_url, download=False)
             formats = info_dict.get('formats', [])
 
-            # Try to find combined (video + audio) formats first
-            for res in PREFERRED_RESOLUTIONS:
-                for fmt in formats:
-                    if fmt.get('format_note') == res and fmt.get('acodec') != 'none' and fmt.get('vcodec') != 'none':
-                        available_formats.append((fmt['format_id'], res, fmt.get('filesize', "Unknown Size"), True))
-                        break
+            video_formats = []
+            audio_formats = []
 
-            # If combined formats are missing, get separate video + audio
-            for res in PREFERRED_RESOLUTIONS:
-                video_fmt, audio_fmt = None, None
-                for fmt in formats:
-                    if fmt.get('format_note') == res and fmt.get('vcodec') != 'none' and fmt.get('acodec') == 'none':
-                        video_fmt = fmt['format_id']
-                    elif fmt.get('acodec') != 'none' and fmt.get('vcodec') == 'none':
-                        audio_fmt = fmt['format_id']
-                
-                if video_fmt and audio_fmt:
-                    available_formats.append((f"{video_fmt}+{audio_fmt}", res, "Merged", False))
+            for fmt in formats:
+                res = fmt.get('format_note') or f"{fmt.get('height', '')}p"
+                filesize = fmt.get('filesize', "Unknown Size")
+
+                if fmt.get('vcodec') != 'none' and fmt.get('acodec') != 'none':
+                    video_formats.append((fmt['format_id'], res, filesize, True))  # Combined format
+                elif fmt.get('vcodec') != 'none':
+                    video_formats.append((fmt['format_id'], res, filesize, False))  # Video-only
+                elif fmt.get('acodec') != 'none':
+                    audio_formats.append((fmt['format_id'], "Audio", filesize, False))  # Audio-only
+
+            # Sort video formats by preferred resolution order
+            video_formats.sort(key=lambda x: PREFERRED_RESOLUTIONS.index(x[1]) if x[1] in PREFERRED_RESOLUTIONS else len(PREFERRED_RESOLUTIONS))
+
+            for fmt_id, res, size, is_combined in video_formats:
+                if is_combined:
+                    available_formats.append((fmt_id, res, size, True))
+                else:
+                    best_audio = max(audio_formats, key=lambda x: x[2] if isinstance(x[2], int) else 0, default=None)
+                    if best_audio:
+                        available_formats.append((f"{fmt_id}+{best_audio[0]}", res, "Merged", False))
 
     except Exception as e:
         print(f"⚠️ Error fetching formats: {e}")
@@ -89,11 +95,9 @@ def upload_to_litterbox(filename, video_title, youtube_url):
             litterbox_url = response.text.strip()
             print(f"\n✅ Uploaded to Litterbox: {litterbox_url}")
 
-            # Save the link in Varlinks folder
             save_link(video_title, youtube_url, litterbox_url)
 
-            # Delete the original file after successful upload
-            os.remove(filename)
+            os.remove(filename)  # Delete file after upload
             print(f"🗑️ Deleted local file: {filename}")
 
             return litterbox_url
