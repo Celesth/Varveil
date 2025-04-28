@@ -1,157 +1,145 @@
 import os
 import yt_dlp
 import requests
+import subprocess
+import time
 from config import URL, TIME
 
-# Create folders for downloads and saved links
 DOWNLOAD_FOLDER = "varveil_downloads"
 VARLINKS_FOLDER = "Varlinks"
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 os.makedirs(VARLINKS_FOLDER, exist_ok=True)
 
-# Litterbox API endpoint
 LITTERBOX_URL = "https://litterbox.catbox.moe/resources/internals/api.php"
-
-# Preferred resolutions (descending order)
 PREFERRED_RESOLUTIONS = ["2160p", "1440p", "1080p", "720p", "480p", "360p"]
 
 def print_banner():
-    """Displays the Varveil banner."""
-    banner = """
- __      __                  _ _ 
- \ \    / /                 (_) |
-  \ \  / /_ _ _ ____   _____ _| |
-   \ \/ / _` | '__\ \ / / _ \ | |
-    \  / (_| | |   \ V /  __/ | |
-     \/ \__,_|_|    \_/ \___|_|_|
-                                 
-"""
-    print(banner)
+    print("\n=== Varveil Downloader ===\n")
 
 def get_available_formats(video_url):
-    """Fetches available formats and ensures best video + audio if needed."""
     ydl_opts = {'quiet': True}
-    available_formats = []
+    formats_list = []
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(video_url, download=False)
-            formats = info_dict.get('formats', [])
+            info = ydl.extract_info(video_url, download=False)
+            formats = info.get('formats', [])
 
             video_formats = []
-            audio_formats = []
 
             for fmt in formats:
                 res = fmt.get('format_note') or f"{fmt.get('height', '')}p"
-                filesize = fmt.get('filesize', "Unknown Size")
+                vcodec = fmt.get('vcodec', 'none')
+                acodec = fmt.get('acodec', 'none')
 
-                if fmt.get('vcodec') != 'none' and fmt.get('acodec') != 'none':
-                    video_formats.append((fmt['format_id'], res, filesize, True))  # Combined format
-                elif fmt.get('vcodec') != 'none':
-                    video_formats.append((fmt['format_id'], res, filesize, False))  # Video-only
-                elif fmt.get('acodec') != 'none':
-                    audio_formats.append((fmt['format_id'], "Audio", filesize, False))  # Audio-only
+                if vcodec != 'none':
+                    video_formats.append((fmt['format_id'], res, "H.264" if "avc" in vcodec or "h264" in vcodec else "Other"))
 
-            # Sort video formats by preferred resolution order
             video_formats.sort(key=lambda x: PREFERRED_RESOLUTIONS.index(x[1]) if x[1] in PREFERRED_RESOLUTIONS else len(PREFERRED_RESOLUTIONS))
 
-            for fmt_id, res, size, is_combined in video_formats:
-                if is_combined:
-                    available_formats.append((fmt_id, res, size, True))
-                else:
-                    best_audio = max(audio_formats, key=lambda x: x[2] if isinstance(x[2], int) else 0, default=None)
-                    if best_audio:
-                        available_formats.append((f"{fmt_id}+{best_audio[0]}", res, "Merged", False))
+            formats_list.extend(video_formats)
 
     except Exception as e:
-        print(f"⚠️ Error fetching formats: {e}")
+        print(f"⚠️ Error: {e}")
 
-    return available_formats
+    return formats_list
 
-def save_link(video_title, youtube_url, litterbox_url):
-    """Saves the Litterbox link and YouTube video info to a file."""
-    filename = os.path.join(VARLINKS_FOLDER, f"{video_title}.txt")
+def save_link(title, url, litter_url):
+    path = os.path.join(VARLINKS_FOLDER, f"{title}.txt")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(f"{title}\n{url}\n{litter_url}\n{TIME}")
+    print(f"Saved link: {path}")
+
+def upload_to_litterbox(filepath, title, url):
     try:
-        with open(filename, "w", encoding="utf-8") as file:
-            file.write(f"🎥 Video Title: {video_title}\n")
-            file.write(f"🔗 YouTube URL: {youtube_url}\n")
-            file.write(f"📤 Litterbox Link: {litterbox_url}\n")
-            file.write(f"⏳ Expiration Time: {TIME}\n")
-        print(f"✅ Saved link in: {filename}")
-    except Exception as e:
-        print(f"⚠️ Error saving link: {e}")
-
-def upload_to_litterbox(filename, video_title, youtube_url):
-    """Uploads a file to Litterbox, deletes the original file, and saves the link."""
-    try:
-        with open(filename, "rb") as file:
-            response = requests.post(LITTERBOX_URL, files={
-                "fileToUpload": file
-            }, data={
-                "reqtype": "fileupload",
-                "time": TIME
-            })
-        if response.status_code == 200:
-            litterbox_url = response.text.strip()
-            print(f"\n✅ Uploaded to Litterbox: {litterbox_url}")
-
-            save_link(video_title, youtube_url, litterbox_url)
-
-            os.remove(filename)  # Delete file after upload
-            print(f"🗑️ Deleted local file: {filename}")
-
-            return litterbox_url
+        with open(filepath, "rb") as f:
+            r = requests.post(LITTERBOX_URL, files={"fileToUpload": f}, data={"reqtype": "fileupload", "time": TIME})
+        if r.ok:
+            litter_url = r.text.strip()
+            print(f"Uploaded: {litter_url}")
+            save_link(title, url, litter_url)
+            os.remove(filepath)
+            print("Local file deleted.")
         else:
-            print(f"❌ Upload failed: {response.text}")
-            return None
+            print(f"❌ Upload failed: {r.text}")
     except Exception as e:
-        print(f"⚠️ An error occurred during upload: {e}")
-        return None
+        print(f"⚠️ Upload error: {e}")
 
-def varveil(video_url, format_id, is_combined):
-    """Downloads a YouTube video and uploads it to Litterbox."""
+def remux_to_h264(input_file):
+    if input_file.lower().endswith(".mp4"):
+        try:
+            probe = subprocess.run(
+                ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=codec_name", "-of", "default=nokey=1:noprint_wrappers=1", input_file],
+                capture_output=True, text=True
+            )
+            codec = probe.stdout.strip()
+            if codec == "h264":
+                print("Already H.264.")
+                return input_file
+        except Exception as e:
+            print(f"⚠️ FFprobe error: {e}")
+            return input_file
+
+    output_file = input_file.rsplit(".", 1)[0] + "_remuxed.mp4"
+    print("Remuxing...")
+    start = time.time()
+    try:
+        subprocess.run([
+            "ffmpeg", "-y", "-i", input_file, "-c:v", "libx264", "-preset", "fast", "-c:a", "aac", output_file
+        ], check=True)
+        os.remove(input_file)
+        print(f"Remux complete in {round(time.time() - start, 2)}s")
+        return output_file
+    except Exception as e:
+        print(f"⚠️ Remux error: {e}")
+        return input_file
+
+def progress_hook(d):
+    if d['status'] == 'downloading':
+        percent = d.get('_percent_str', '').strip()
+        speed = d.get('_speed_str', '').strip()
+        print(f"\rDownloading: {percent} at {speed}", end='', flush=True)
+    elif d['status'] == 'finished':
+        print("\nDownload complete.")
+
+def varveil(video_url, fmt_id):
     ydl_opts = {
-        'format': format_id,
+        'format': f"{fmt_id}+bestaudio/best",
         'outtmpl': os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s'),
-        'merge_output_format': 'mp4' if not is_combined else None,  # Merge if separate
+        'progress_hooks': [progress_hook],
+        'merge_output_format': 'mp4',
+        'quiet': True,
     }
-
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(video_url, download=True)
-            filename = ydl.prepare_filename(info_dict)
-            video_title = info_dict.get("title", "Unknown Video")
+            info = ydl.extract_info(video_url, download=True)
+            file = ydl.prepare_filename(info)
+            title = info.get("title", "Unknown")
 
-            # Upload to Litterbox and delete the file
-            upload_to_litterbox(filename, video_title, video_url)
-
+            file = remux_to_h264(file)
+            upload_to_litterbox(file, title, video_url)
     except Exception as e:
-        print(f"⚠️ An error occurred: {e}")
+        print(f"⚠️ Download error: {e}")
 
 if __name__ == "__main__":
     print_banner()
-    
-    url = URL if URL else input("\n🔗 Enter the YouTube video URL: ").strip()
+    url = URL if URL else input("Enter URL: ").strip()
 
-    # Get available formats
     formats = get_available_formats(url)
     if not formats:
-        print("❌ No available formats found.")
-        exit(1)
+        print("❌ No formats.")
+        exit()
 
-    # Display available formats
-    print("\n🎥 Available Video Qualities:")
-    for i, (fmt_id, fmt_note, fmt_size, is_combined) in enumerate(formats, start=1):
-        type_label = "✅ Video + Audio" if is_combined else "🔄 Merged"
-        print(f"{i}. {fmt_note} - {fmt_size} ({fmt_id}) [{type_label}]")
+    print("\nQualities:")
+    for i, (fid, res, label) in enumerate(formats, 1):
+        print(f"{i}. {res} ({label})")
 
-    # User selects a format
     try:
-        choice = int(input("\n📌 Select a format number to download: ").strip()) - 1
-        if 0 <= choice < len(formats):
-            selected_format, selected_res, _, is_combined = formats[choice]
-            varveil(url, selected_format, is_combined)
+        idx = int(input("\nPick number: ")) - 1
+        if 0 <= idx < len(formats):
+            fmt, _, _ = formats[idx]
+            varveil(url, fmt)
         else:
             print("❌ Invalid selection.")
     except ValueError:
-        print("❌ Invalid input. Please enter a number.")
+        print("❌ Invalid input.")
