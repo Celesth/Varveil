@@ -3,6 +3,11 @@
 # 
 Varveil is a YouTube video downloader that prioritizes 4K resolution and uploads the downloaded videos to Litterbox for temporary storage.
 
+## Note:
+- There's Two Versions Of This, One For Online IDE And Other For Local
+- [online](Src/main.py)
+- [local](Src/m_main.py)
+
 ## Features
 #
 Downloads YouTube videos in the highest available quality (4K → 2K → 1080p).
